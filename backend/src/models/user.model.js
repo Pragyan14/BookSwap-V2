@@ -1,7 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 import bcrypt from "bcrypt";
 
-
 const userSchema = new Schema(
     {
         fullname:{
@@ -45,6 +44,9 @@ userSchema.pre("save" , async function(next){
     next();
 })
 
-
+// check password when user login
+userSchema.methods.isPasswordCorrect = async function(password){
+    return await bcrypt.compare(password,this.password);
+}
 
 export const User = mongoose.model("User",userSchema);
