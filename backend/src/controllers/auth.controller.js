@@ -3,8 +3,9 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import { generateToken } from "../utils/generateToken.js"
-import { sendVerificationEMail, sendWelcomeEmail, sendPasswordResetEmail, sendResetSuccessEmail } from "../mailtrap/email.js"
+// import { sendVerificationEMail, sendWelcomeEmail, sendPasswordResetEmail, sendResetSuccessEmail } from "../mailtrap/email.js"
 import crypto from 'crypto';
+import { nodemailerSendPasswordResetEmail, nodemailerSendResetSuccessEmail, nodemailerSendVerificationEmail, nodemailerSendWelcomeEmail } from "../mail/email.js"
 
 const signup = asyncHandler(async (req, res) => {
     const { fullname, email, password } = req.body;
@@ -45,7 +46,8 @@ const signup = asyncHandler(async (req, res) => {
         maxAge: 7 * 24 * 60 * 60 * 1000
     }
 
-    await sendVerificationEMail(createdUser.email, verificationToken);
+    // await sendVerificationEMail(createdUser.email, verificationToken);
+    await nodemailerSendVerificationEmail(createdUser.email, verificationToken);
 
     return res
         .status(201)
@@ -73,7 +75,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
         await user.save();
 
-        await sendWelcomeEmail(user.email, user.fullname)
+        await nodemailerSendWelcomeEmail(user.email, user.fullname)
 
         return res
             .status(200)
@@ -166,7 +168,7 @@ const forgetPassword = asyncHandler(async (req, res) => {
 
         await user.save();
 
-        await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+        await nodemailerSendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
 
         return res.status(200).json(new ApiResponse(200, null, "Password reset link sent to your email"))
 
@@ -197,12 +199,12 @@ const resetPassword = asyncHandler(async (req, res) => {
 
         await user.save({ validateBeforeSave: false });
 
-        await sendResetSuccessEmail(user.email);
+        await nodemailerSendResetSuccessEmail(user.email);
 
         return res.status(200).json(new ApiResponse(200, null, "Password reset successfully"))
     } catch (error) {
         console.log("Error in resetPassword: ", error);
-        throw new ApiError(400, "Error in resetPassword:")
+        throw new ApiError(400, "Error in resetPassword:", error)
     }
 })
 

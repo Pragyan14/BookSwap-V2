@@ -29,7 +29,7 @@ function signup() {
   return (
     <>
       <div
-        className='min-h-screen bg-gradient-to-br from-primary/25 via-primaryHover/25 to-backgroundLight flex items-center justify-center px-4 sm:px-6 relative overflow-hidden'>
+        className='min-h-screen bg-gradient-to-br from-primary/20 via-primaryHover/20 to-backgroundLight flex items-center justify-center px-4 sm:px-6 relative overflow-hidden'>
         <FloatingShape color='bg-primary' size='w-64 h-64' top='-5%' left='10%' delay={0} />
         <FloatingShape color='bg-primaryHover' size='w-48 h-48' top='70%' left='80%' delay={5} />
         <FloatingShape color='bg-textSubtle' size='w-32 h-32' top='40%' left='-10%' delay={2} />
