@@ -2,13 +2,13 @@ import { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE, VERIF
 import { ApiError } from "../utils/ApiError.js";
 import { transporter } from "./nodemailer.config.js"
 
-export const sendVerificationEmail = async (email, verificationToken) => {
+export const sendVerificationEmail = async (email, verificationURL) => {
     try {
         const response = await transporter.sendMail({
             from: '"BookSwap" <noreply_BookSwap@gmail.com>',
             to: email,
             subject: "Verify your email",
-            html: VERIFICATION_EMAIL_TEMPLATE.replace("{verificationCode}", verificationToken), // HTML body
+            html: VERIFICATION_EMAIL_TEMPLATE.replace("{verificationURL}", verificationURL), // HTML body
         })
 
         console.log("Verification email sent successfully : ", response.response);

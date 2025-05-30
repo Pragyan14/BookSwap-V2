@@ -1,10 +1,30 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import { generateToken } from "../utils/generateToken.js"
 import crypto from 'crypto';
+import jwt from "jsonwebtoken";
 import { sendPasswordResetEmail, sendResetSuccessEmail, sendVerificationEmail, sendWelcomeEmail } from "../mail/email.js"
+
+const generateAccessAndRefreshToken = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: true })
+
+        return { accessToken, refreshToken }
+
+    } catch (error) {
+        throw new ApiError(500, "Something want wrong while generating access and refresh token:", error);
+    }
+}
 
 const signup = asyncHandler(async (req, res) => {
     const { fullname, email, password } = req.body;
@@ -19,79 +39,69 @@ const signup = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User already existed")
     }
 
-    const verificationToken = Math.floor(10000 + Math.random() * 900000).toString();
-
     const user = await User.create({
         email,
         password,
-        fullname,
-        verificationToken,
-        verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000
+        fullname
     })
 
-
-    const createdUser = await User.findById(user._id).select("-password")
+    const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 
-    const token = generateToken(createdUser._id);
+    const verificationToken = jwt.sign(
+        { email: createdUser.email },
+        process.env.EMAIL_VERIFICATION_SECRET,
+        { expiresIn: '30m' }
+    );
 
-    const options = {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    }
+    await sendVerificationEmail(createdUser.email, `${process.env.CLIENT_URL}/verify-email?verificationToken=${verificationToken}`);
+    // console.log(verificationToken);
+    
 
-    // await sendVerificationEMail(createdUser.email, verificationToken);
-    await sendVerificationEmail(createdUser.email, verificationToken);
+    // const options = {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: 'strict',
+    //     maxAge: 7 * 24 * 60 * 60 * 1000
+    // }
 
-    return res
-        .status(201)
-        .cookie("token", token, options)
-        .json(
-            new ApiResponse(200, createdUser, "User registered successfully")
-        )
+    return res.status(201).json(
+        new ApiResponse(200, createdUser, "User registered successfully")
+    )
 })
 
 const verifyEmail = asyncHandler(async (req, res) => {
-    const { code } = req.body;
-    try {
-        const user = await User.findOne({
-            verificationToken: code,
-            verificationTokenExpiresAt: { $gt: Date.now() }
-        }).select("-password")
 
-        if (!user) {
-            throw new ApiError(400, "Invalid or expired verification code ");
+    const { verificationToken } = req.query;
+
+    try {
+
+        if (!verificationToken) throw new ApiError(401, "Error in getting verification token");
+
+        const decodedToken = jwt.verify(verificationToken, process.env.EMAIL_VERIFICATION_SECRET);
+
+        const user = await User.findOne({ email: decodedToken.email }).select("-password");
+
+        if (!user) throw new ApiError(404, "User not found");
+
+        if (user.isVerified) {
+            return res.status(200).json(new ApiResponse(200, null, "Email already verified"));
         }
 
         user.isVerified = true;
-        user.verificationToken = undefined;
-        user.verificationTokenExpiresAt = undefined;
-
         await user.save();
 
         await sendWelcomeEmail(user.email, user.fullname)
 
-        return res
-            .status(200)
-            .json(
-                new ApiResponse(200, { email: user.email, fullname: user.fullname }, "User verified successfully")
-            )
-
+        return res.status(200).json(new ApiResponse(200, null, "Email verified, please log in."));
 
     } catch (error) {
-        console.log("Error while verifying email: ", error.message);
-        if (error instanceof ApiError) {
-            throw error;
-        }
-
-        // Unknown/internal error
-        throw new ApiError(500, "Something went wrong during verification");
+        throw new ApiError(400, "Invalid or expired verification link");
     }
+
 })
 
 const login = asyncHandler(async (req, res) => {

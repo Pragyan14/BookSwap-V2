@@ -19,7 +19,7 @@ const router = Router();
 router.route("/login").post(login)
 router.route("/signup").post(signup)
 router.route("/logout").post(logout)
-router.route("/verify-email").post(verifyEmail)
+router.route("/verify-email").get(verifyEmail)
 router.route("/forget-password").post(forgetPassword)
 router.route("/reset-password/:token").post(resetPassword)
 router.route("/check-auth").get(verifyJWT, checkAuth)
