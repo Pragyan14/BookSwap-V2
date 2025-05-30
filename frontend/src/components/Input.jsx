@@ -5,13 +5,14 @@ const Input = ({ icon: Icon, ...props }) => {
 				<Icon className='w-4 h-4 sm:size-5 text-primary' />
 			</div>
 			<input
-			    // #3F8FAFC  input bg color alt
+				// #3F8FAFC  input bg color alt
 				{...props}
 				className='w-full pl-9 sm:pl-10 pr-3 py-2 sm:py-2.5 text-sm sm:text-base
         bg-[#D9EAFD]/25 rounded-lg border border-primary 
         focus:border-primaryHover focus:ring-2 focus:ring-primaryHover 
         focus:outline-none text-textMain placeholder-textSubtle 
         transition duration-200'
+				required={true}
 			/>
 		</div>
 	);

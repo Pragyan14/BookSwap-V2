@@ -2,13 +2,15 @@ import FloatingShape from '../../components/FloatingShape'
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useRef, useState, useEffect } from 'react';
+import { useAuthStore } from '../../store/authStore';
+import toast from 'react-hot-toast';
 
 function VerifyEmail() {
 
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const navigate = useNavigate();
   const inputRefs = useRef([])
-  const isLoading = false;
+  const {verifyEmail, error, isLoading} = useAuthStore();
 
   const handleChange = (index,value) => {
     const newCode = [...code];
@@ -45,14 +47,13 @@ function VerifyEmail() {
   const handleSubmit = async (e) => {
 		e.preventDefault();
 		const verificationCode = code.join("");
-		// try {
-		// 	await verifyEmail(verificationCode);
-		// 	navigate("/");
-		// 	toast.success("Email verified successfully");
-		// } catch (error) {
-		// 	console.log(error);
-		// }
-    console.log(verificationCode)
+		try {
+			await verifyEmail(verificationCode);
+			navigate("/");
+			toast.success("Email verified successfully");
+		} catch (error) {
+			console.log(error);
+		}
 	};
 
   useEffect(() => {
@@ -95,7 +96,7 @@ function VerifyEmail() {
 							/>
               ))}
             </div>
-
+              {error && <p className='text-red-500 font-semibold mt-2'>{error}</p>}
               <motion.button
                 className='mt-2 w-full py-3 px-4 bg-gradient-to-r from-primary to-primaryHover text-white font-bold rounded-lg shadow-md hover:from-primaryHover hover:to-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-backgroundLight transition duration-200'
                 whileHover={{ scale: 1.02 }}

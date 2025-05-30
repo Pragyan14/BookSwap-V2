@@ -3,9 +3,8 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import { generateToken } from "../utils/generateToken.js"
-// import { sendVerificationEMail, sendWelcomeEmail, sendPasswordResetEmail, sendResetSuccessEmail } from "../mailtrap/email.js"
 import crypto from 'crypto';
-import { nodemailerSendPasswordResetEmail, nodemailerSendResetSuccessEmail, nodemailerSendVerificationEmail, nodemailerSendWelcomeEmail } from "../mail/email.js"
+import { sendPasswordResetEmail, sendResetSuccessEmail, sendVerificationEmail, sendWelcomeEmail } from "../mail/email.js"
 
 const signup = asyncHandler(async (req, res) => {
     const { fullname, email, password } = req.body;
@@ -47,7 +46,7 @@ const signup = asyncHandler(async (req, res) => {
     }
 
     // await sendVerificationEMail(createdUser.email, verificationToken);
-    await nodemailerSendVerificationEmail(createdUser.email, verificationToken);
+    await sendVerificationEmail(createdUser.email, verificationToken);
 
     return res
         .status(201)
@@ -75,18 +74,23 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
         await user.save();
 
-        await nodemailerSendWelcomeEmail(user.email, user.fullname)
+        await sendWelcomeEmail(user.email, user.fullname)
 
         return res
             .status(200)
             .json(
-                new ApiResponse(200, user, "User verified successfully")
+                new ApiResponse(200, { email: user.email, fullname: user.fullname }, "User verified successfully")
             )
 
 
     } catch (error) {
-        console.log("Error while verifying email");
+        console.log("Error while verifying email: ", error.message);
+        if (error instanceof ApiError) {
+            throw error;
+        }
 
+        // Unknown/internal error
+        throw new ApiError(500, "Something went wrong during verification");
     }
 })
 
@@ -134,7 +138,6 @@ const login = asyncHandler(async (req, res) => {
     } catch (error) {
         console.log("Error in login : ", error);
         res.status(400).json({ success: false, message: error.message })
-
     }
 })
 
@@ -168,7 +171,7 @@ const forgetPassword = asyncHandler(async (req, res) => {
 
         await user.save();
 
-        await nodemailerSendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+        await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
 
         return res.status(200).json(new ApiResponse(200, null, "Password reset link sent to your email"))
 
@@ -199,7 +202,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
         await user.save({ validateBeforeSave: false });
 
-        await nodemailerSendResetSuccessEmail(user.email);
+        await sendResetSuccessEmail(user.email);
 
         return res.status(200).json(new ApiResponse(200, null, "Password reset successfully"))
     } catch (error) {
@@ -210,7 +213,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 const checkAuth = asyncHandler(async (req, res) => {
     try {
-        console.log(req.userId);
+        // console.log(req.userId);
         const user = await User.findById(req.userId).select("-password");
         if (!user) return res.status(400).json({ success: false, message: "User not found" });
         return res.status(200).json(new ApiResponse(200, user))

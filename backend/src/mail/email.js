@@ -2,7 +2,7 @@ import { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE, VERIF
 import { ApiError } from "../utils/ApiError.js";
 import { transporter } from "./nodemailer.config.js"
 
-export const nodemailerSendVerificationEmail = async (email, verificationToken) => {
+export const sendVerificationEmail = async (email, verificationToken) => {
     try {
         const response = await transporter.sendMail({
             from: '"BookSwap" <noreply_BookSwap@gmail.com>',
@@ -19,7 +19,7 @@ export const nodemailerSendVerificationEmail = async (email, verificationToken) 
     }
 }
 
-export const nodemailerSendPasswordResetEmail = async (email, resetURL) => {
+export const sendPasswordResetEmail = async (email, resetURL) => {
     try {
         const response = await transporter.sendMail({
             from: '"BookSwap" <noreply_BookSwap@gmail.com>',
@@ -37,7 +37,7 @@ export const nodemailerSendPasswordResetEmail = async (email, resetURL) => {
     }
 }
 
-export const nodemailerSendResetSuccessEmail = async (email) => {
+export const sendResetSuccessEmail = async (email) => {
     try {
         const response = await transporter.sendMail({
             from: '"BookSwap" <noreply_BookSwap@gmail.com>',
@@ -55,7 +55,7 @@ export const nodemailerSendResetSuccessEmail = async (email) => {
     }
 }
 
-export const nodemailerSendWelcomeEmail = async (email,name) => {
+export const sendWelcomeEmail = async (email,name) => {
     try {
         const response = await transporter.sendMail({
             from: '"BookSwap" <noreply_BookSwap@gmail.com>',
