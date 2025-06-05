@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, logout, signup, verifyEmail, forgetPassword, resetPassword, checkAuth } from "../controllers/auth.controller.js";
+import { login, logout, signup, verifyEmail, forgotPassword, resetPassword, checkAuth } from "../controllers/auth.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -18,9 +18,9 @@ const router = Router();
 
 router.route("/login").post(login)
 router.route("/signup").post(signup)
-router.route("/logout").post(logout)
+router.route("/logout").post(verifyJWT,logout)
 router.route("/verify-email").get(verifyEmail)
-router.route("/forget-password").post(forgetPassword)
+router.route("/forgot-password").post(forgotPassword)
 router.route("/reset-password/:token").post(resetPassword)
 router.route("/check-auth").get(verifyJWT, checkAuth)
 

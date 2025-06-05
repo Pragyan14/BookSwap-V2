@@ -58,15 +58,6 @@ const signup = asyncHandler(async (req, res) => {
     );
 
     await sendVerificationEmail(createdUser.email, `${process.env.CLIENT_URL}/verify-email?verificationToken=${verificationToken}`);
-    // console.log(verificationToken);
-    
-
-    // const options = {
-    //     httpOnly: true,
-    //     secure: true,
-    //     sameSite: 'strict',
-    //     maxAge: 7 * 24 * 60 * 60 * 1000
-    // }
 
     return res.status(201).json(
         new ApiResponse(200, createdUser, "User registered successfully")
@@ -107,63 +98,70 @@ const verifyEmail = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    try {
-        const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-        if (!user) {
-            throw new ApiError(404, "Invalid user credentials")
-        }
-
-        const isPasswordValid = await user.isPasswordCorrect(password);
-
-        if (!isPasswordValid) {
-            throw new ApiError(401, "Invalid user credentials")
-        }
-
-        const token = generateToken(user._id);
-
-        user.lastLogin = new Date();
-        await user.save();
-
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
-
-        return res
-            .status(200)
-            .cookie("token", token, options)
-            .json(
-                new ApiResponse(200,
-                    {
-                        user: {
-                            ...user._doc,
-                            password: undefined,
-                        },
-                    },
-                    "User logged in successfully"
-                )
-            )
-
-    } catch (error) {
-        console.log("Error in login : ", error);
-        res.status(400).json({ success: false, message: error.message })
+    if (!user) {
+        throw new ApiError(404, "Invalid user credentials")
     }
-})
 
-const logout = asyncHandler(async (req, res) => {
+    const isPasswordValid = await user.isPasswordCorrect(password);
+
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid user credentials")
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    user.password = undefined;
+    user.refreshToken = undefined;
+
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: 'strict',
     }
 
     return res
         .status(200)
-        .clearCookie("token", options)
-        .json(new ApiResponse(200, {}, "User logged out"))
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(200,user,"User logged in successfully")
+        )
+
 })
 
-const forgetPassword = asyncHandler(async (req, res) => {
+const logout = asyncHandler(async (req, res) => { 
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {refreshToken: ""}
+        },
+        {
+            new : true,
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        path: "/"
+    }
+
+    return res
+    .status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
+    .json(new ApiResponse(200,{},"User logged out"))
+})
+
+const forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.body;
 
     try {
@@ -222,18 +220,14 @@ const resetPassword = asyncHandler(async (req, res) => {
 })
 
 const checkAuth = asyncHandler(async (req, res) => {
-    try {
-        // console.log(req.userId);
-        const user = await User.findById(req.userId).select("-password");
-        if (!user) return res.status(400).json({ success: false, message: "User not found" });
-        return res.status(200).json(new ApiResponse(200, user))
 
-    } catch (error) {
+    const user = req.user; 
 
-        console.log("Error in check auth: ", error);
-        res.status(400).json({ success: false, message: error.message })
-
+    if (!user) {
+        throw new ApiError(400, "User not found");
     }
+
+    return res.status(200).json(new ApiResponse(200, user));
 })
 
-export { signup, login, logout, verifyEmail, forgetPassword, resetPassword, checkAuth }
+export { signup, login, logout, verifyEmail, forgotPassword, resetPassword, checkAuth }

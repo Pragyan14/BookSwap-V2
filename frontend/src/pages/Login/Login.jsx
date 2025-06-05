@@ -1,30 +1,22 @@
 import FloatingShape from '../../components/FloatingShape'
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
-import { Loader, Lock, Mail, User } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Loader, Lock, Mail } from "lucide-react";
 import { useState } from 'react';
-import  Input  from '../../components/Input';
+import Input from '../../components/Input';
+import { useAuthStore } from '../../store/authStore';
 
 function login() {
-  
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const navigate = useNavigate();
+  const { login, error, isLoading } = useAuthStore();
 
-  const handleSignUp = async (e) => {
-		e.preventDefault();
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    await login(email, password)
+  };
 
-		try {
-			await signup(email, password, name);
-			navigate("/verify-email");
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
-  let error = false;
-  let isLoading = false
-  
 
   return (
     <>
@@ -49,7 +41,7 @@ function login() {
               Login
             </h1>
 
-            <form onSubmit={handleSignUp}>
+            <form onSubmit={handleLogin}>
               <Input
                 icon={Mail}
                 type='email'
@@ -65,6 +57,12 @@ function login() {
                 onChange={(e) => setPassword(e.target.value)}
               />
               {error && <p className='text-red-500 font-semibold mt-2'>{error}</p>}
+
+              <div className='flex items-center mb-2'>
+                <Link to='/forgot-password' className='text-sm text-primary hover:underline'>
+                  Forgot password?
+                </Link>
+              </div>
 
               <motion.button
                 className='mt-4 w-full py-3 px-4 bg-gradient-to-r from-primary to-primaryHover text-white font-bold rounded-lg shadow-md hover:from-primaryHover hover:to-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-backgroundLight transition duration-200'
