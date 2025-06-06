@@ -214,8 +214,8 @@ const resetPassword = asyncHandler(async (req, res) => {
 
         return res.status(200).json(new ApiResponse(200, null, "Password reset successfully"))
     } catch (error) {
-        console.log("Error in resetPassword: ", error);
-        throw new ApiError(400, "Error in resetPassword:", error)
+        console.log("Error in resetPassword: ", error.message);
+        throw error
     }
 })
 

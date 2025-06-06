@@ -1,20 +1,26 @@
 import FloatingShape from '../../components/FloatingShape'
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader, Lock, Mail } from "lucide-react";
 import { useState } from 'react';
 import Input from '../../components/Input';
 import { useAuthStore } from '../../store/authStore';
+import toast from 'react-hot-toast';
 
-function login() {
+function Login() {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { login, error, isLoading } = useAuthStore();
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    await login(email, password)
+    await login(email, password);
+    if (!error) {
+      toast.success("Logged in successfully!");
+      navigate("/")
+    }
   };
 
 
@@ -90,4 +96,4 @@ function login() {
   )
 }
 
-export default login
+export default Login

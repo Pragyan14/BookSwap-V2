@@ -1,7 +1,7 @@
 import '@mantine/core/styles.css';
 import { MantineProvider } from '@mantine/core';
 import { Routes, Route, Navigate } from "react-router";
-import { Login, Signup, Profile, VerifyEmail, ForgotPassword } from './pages/index.js';
+import { Login, Signup, VerifyEmail, ForgotPassword, ResetPassword, Logout, Profile, Home } from './pages/index.js';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore.js';
 import { useEffect } from 'react';
@@ -48,7 +48,7 @@ function App() {
       <>
         <Routes>
 
-          <Route path='/' element={"Home"} />
+          <Route path='/' element={<Home/>}/>
 
           <Route path='/login' element={
             <RedirectAuthenticatedUser>
@@ -72,14 +72,20 @@ function App() {
 
           <Route path='/profile' element={
             <ProtectedRoute>
-              <Profile />
+              <Profile/>
             </ProtectedRoute>
           } />
 
           <Route path='/reset-password/:token' element={
             <RedirectAuthenticatedUser>
-              {"Reset-password"}
+              <ResetPassword/>
             </RedirectAuthenticatedUser>
+          } />
+
+          <Route path='/logout' element={
+            <ProtectedRoute>
+              <Logout/>
+            </ProtectedRoute>
           } />
 
         </Routes>

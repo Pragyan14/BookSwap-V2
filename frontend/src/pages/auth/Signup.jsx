@@ -12,7 +12,6 @@ function signup() {
   const [fullname, setFullname] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const navigate = useNavigate();
   const { signup, error, isLoading } = useAuthStore();
   const [emailSent, setEmailSent] = useState(false);
 
@@ -35,33 +34,36 @@ function signup() {
         <FloatingShape color='bg-primaryHover' size='w-48 h-48' top='70%' left='80%' delay={5} />
         <FloatingShape color='bg-textSubtle' size='w-32 h-32' top='40%' left='-10%' delay={2} />
 
-        {emailSent ? (
-          <div className="flex flex-col items-center justify-center mt-10 p-6 rounded-lg bg-green-50 border border-green-200 max-w-md mx-auto text-center shadow-sm">
-            <CheckCircle className="w-12 h-12 text-green-600 mb-4" />
-            <h2 className="text-xl font-semibold text-green-700">Verify your email</h2>
-            <p className="text-gray-700 mt-2">
-              We’ve sent a verification link to your email address. Please click the link to activate your account.
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Didn’t receive it? Check your spam folder.
-            </p>
-          </div>
-        ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className='max-w-md w-full bg-white bg-opacity-20 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden'
+        >
+          <div className='p-6 sm:p-8'>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className='max-w-md w-full bg-white bg-opacity-20 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden'
-          >
-            <div className='p-6 sm:p-8'>
-              <h2 className='text-xl font-bold mb-4 text-center bg-gradient-to-r from-primary to-primaryHover text-transparent bg-clip-text'>
-                BookSwap
-              </h2>
+            <h2 className='text-3xl font-bold mb-6 text-center bg-gradient-to-r from-primary to-primaryHover text-transparent bg-clip-text'>
+              Signup
+            </h2>
 
-              <h1 className='text-xl sm:text-2xl mb-4 text-textSubtle text-center'>
-                Signup
-              </h1>
+            {emailSent ? (<div className='text-center'>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className='w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4'
+              >
+                <Mail className='h-8 w-8 text-white' />
+              </motion.div>
+              <p className='text-textSubtle mb-4'>
+                We’ve sent a verification link to your email address. Please click the link to activate your account.
+              </p>
+
+              <p className="text-sm text-gray-500 mt-1">
+                Didn’t receive it? Check your spam folder.
+              </p>
+            </div>) : (
+
 
               <form onSubmit={handleSignUp}>
                 <Input
@@ -104,17 +106,18 @@ function signup() {
                   {isLoading ? <Loader className=' animate-spin mx-auto' size={24} /> : "Sign Up"}
                 </motion.button>
               </form>
-            </div>
-            <div className='px-8 py-4 bg-backgroundLight bg-opacity-60 flex justify-center'>
-              <p className='text-sm text-textSubtle'>
-                Already have an account?{" "}
-                <Link to={"/login"} className='text-primary hover:underline'>
-                  Login
-                </Link>
-              </p>
-            </div>
-          </motion.div>
-        )}
+            )}
+
+          </div>
+          <div className='px-8 py-4 bg-backgroundLight bg-opacity-60 flex justify-center'>
+            <p className='text-sm text-textSubtle'>
+              Already have an account?{" "}
+              <Link to={"/login"} className='text-primary hover:underline'>
+                Login
+              </Link>
+            </p>
+          </div>
+        </motion.div>
       </div>
     </>
   )
